@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 authors:
-  - family-names: Kerzner
-    given-names: Alex
+  - family-names: "Kerzner"
+    given-names: "Alex"
 title: "EigenvalueFinding"
 version: 2.0.4
 date-released: 2023-04-11
