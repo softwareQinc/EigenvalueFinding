@@ -1,5 +1,6 @@
 import numpy as np
 from math import log2, ceil
+from random import random
 from scipy.linalg import expm
 from qiskit import QuantumCircuit, Aer
 from qiskit.extensions import UnitaryGate
@@ -93,8 +94,15 @@ def find_min(eigfinding):
     return y_seq
 
 
-# if __name__ == "__main__":  # Run algorithm on random matrix
-    # # Specify error and matrix size
+if __name__ == "__main__":  # Run algorithm on random matrix
+    error=2**-7
+    dim=8
+    d = [0.1 + 0.8*random() for _ in range(dim)]
+    mat = np.diag(d)
+    ef = EigenvalueFinding(mat,error)
+    find_min(ef)
+
+    # Specify error and matrix size
     # error = 2**(-7)
     # bits_of_precision = ceil(log2(1 / error))
     # dim = 2**3
