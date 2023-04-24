@@ -83,7 +83,7 @@ def find_min(eigfinding):
     Output: List of estimates [y_0, y_1, ..., y_m]"""
     y = 0.5  # y_0
     y_seq = [y]
-    for i in range(1, eigfinding.m):
+    for i in range(1, eigfinding.m + 1):
         ptilde = amp_est(eigfinding=eigfinding, y=y)
         if ptilde > eigfinding.q:
             y -= 1/2**(i+1)
