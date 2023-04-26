@@ -65,7 +65,7 @@ def amp_est(eigfinding, y, alpha=None):
     Input: eigfinding object, float y for the function \chi_y, failure probability alpha.
     Output: Estimate of \Pr[X < y]."""
     if alpha is None:
-        alpha = 1 - 0.9 ** (1 / eigfinding.m)  # This ensures the overall success probability is >= 0.9
+        alpha = 1 - 0.99 ** (1 / eigfinding.m)  # This ensures the overall success probability is >= 0.99
 
     problem = EstimationProblem(state_preparation=algorithm_a(eigfinding=eigfinding),
                                 objective_qubits=list(range(eigfinding.qpe_bits)),

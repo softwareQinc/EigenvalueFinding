@@ -15,7 +15,7 @@ def get_ground_state(matrix, epsilon):
     # Step 1: Get estimate \theta_0
     # ef = EigenvalueFinding(matrix, epsilon/2)
     # theta0 = find_min(ef)
-    theta0 = 0.375  # Skip step 1 for testing purposes just to save time
+    theta0 = 0.125  # Skip step 1 for testing purposes just to save time
 
     # Step 2: Construct the Grover circuit
     ef = EigenvalueFinding(matrix, epsilon/4)  # Need a bit more precision
@@ -34,38 +34,28 @@ def get_ground_state(matrix, epsilon):
     grover = Grover(sampler=Sampler())
 
     # Step 3: Figure out how many iterations are needed
-    result = grover.amplify(problem)
-    n_iterations = result.iterations[-1]
-    qc = grover.construct_circuit(problem=problem, power=n_iterations, measurement=False)
+    qc = grover.construct_circuit(problem=problem, power=1, measurement=False)
     # Step 4: Execute circuit and extract statevector
     backend = Aer.get_backend("statevector_simulator")
     # First we need to apply the bit oracle in order to postselect
     qc.add_register(QuantumRegister(1))
     qc.h(ef.qpe_bits + ef.n)
 
-    po = QuantumCircuit(ef.qpe_bits + ef.n)
+    po = QuantumCircuit(ef.qpe_bits + ef.n)  # Phase oracle
     po.diagonal([(-1)**(x in oracle_list) for x in range(2**(ef.qpe_bits + ef.n))], list(range(ef.qpe_bits + ef.n)))
     cpo = po.to_gate().control(num_ctrl_qubits=1)
     qc.append(cpo, [ef.qpe_bits + ef.n] + list(range(ef.qpe_bits + ef.n)))
 
     qc.h(ef.qpe_bits + ef.n)
-    # qc.add_register(ClassicalRegister(1))
-    # qc.measure(ef.qpe_bits + ef.n, 0)
+    print(qc)
     qc = transpile(qc, backend)
     job = backend.run(qc)
-    print(job.result().get_statevector().probabilities([ef.qpe_bits+ef.n]))
-
-    ancilla_result = False
-
-    while not ancilla_result:
-        job = backend.run(qc)
-        ancilla_result = '1' in job.result().get_counts()
-
-    svec = job.result().get_statevector(qc)  # Now postselect on |1>
-
-    # Step 4: Trace out the clock register and the measured qubit
-    return partial_trace(svec, list(range(ef.qpe_bits)) + [ef.qpe_bits+ef.n])
-
+    result = job.result()
+    svec = result.get_statevector(qc)
+    projector = Statevector([0, 1]).to_operator()
+    svec.evolve(projector, [ef.qpe_bits+ef.n])  # Postselect last qubit being |1>
+    # Now trace out qubits 0, 1, ..., 8 and 12
+    return partial_trace(svec, list(range(9)) + [12])
 
 if __name__ == "__main__":
     # Specify error and matrix size
@@ -78,5 +68,6 @@ if __name__ == "__main__":
     mat = np.diag(d)
     # un = unitary_group.rvs(dim)
     # mat = un @ np.diag(d) @ un.conj().T
+
     rho = get_ground_state(mat, error)
     print(rho.probabilities_dict())
