@@ -15,7 +15,7 @@ def get_ground_state(matrix, epsilon):
     # Step 1: Get estimate \theta_0
     # ef = EigenvalueFinding(matrix, epsilon/4)
     # theta0 = find_min(ef)
-    theta0 = 0.2  # Skip step 1 for testing purposes just to save time
+    theta0 = 0.21  # Skip step 1 for testing purposes just to save time
 
     # Step 2: Construct the Grover circuit
     ef = EigenvalueFinding(matrix, epsilon/4)  # Need a bit more precision
@@ -24,7 +24,7 @@ def get_ground_state(matrix, epsilon):
     for x in range(2**ef.qpe_bits):
         if abs(x/2**ef.qpe_bits - theta0) < epsilon/2:
             for y in range(2**ef.n):
-                z = bin(y)[2:].zfill(ef.n) + bin(x)[2:].zfill(ef.qpe_bits)
+                z = bin(y)[2:].zfill(ef.n) + bin(x)[2:].zfill(ef.qpe_bits)[::-1]  # Check this...
                 good_states.append(z)
                 oracle_list[int(z, 2)] = 1
 
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     dim = 2**3
 
     # Choose random Hermitian matrix to run algorithm on by choosing random diagonal matrix and conjugating by unitary
-    d = [0.2]+[0.7501 for _ in range(dim-1)]
+    d = [0.19]+[0.7123 for _ in range(dim-1)]
     mat = np.diag(d)
     # un = unitary_group.rvs(dim)
     # mat = un @ np.diag(d) @ un.conj().T
