@@ -69,13 +69,19 @@ if __name__ == "__main__":
     dim = 2**3
 
     # Choose random Hermitian matrix to run algorithm on by choosing random diagonal matrix and conjugating by unitary
-    d = [0.19]+[0.7123 for _ in range(dim-1)]
+    d = [0.2] + [0.25 + 0.6 * random() for _ in range(dim-1)]  # If you change 0.2 you must also change theta0 above
+    d = np.sort(d)
     mat = np.diag(d)
-    # un = unitary_group.rvs(dim)
-    # mat = un @ np.diag(d) @ un.conj().T
+    un = unitary_group.rvs(dim)
+    mat = un @ np.diag(d) @ un.conj().T
+    _, p = np.linalg.eigh(mat)
+    psi_0 = p[:, 0]
 
     rho = get_ground_state(mat, error)
-    probs = rho.probabilities()  # Get probabilities
-    probs /= sum(probs)  # Normalize
-    print(probs)
+    overlap = rho.evolve(Statevector(psi_0)).trace()
+    print(overlap.real)  # Ignore small imaginary component coming from roundoff error
+
+    # probs = rho.probabilities()  # Get probabilities
+    # probs /= sum(probs)  # Normalize
+    # print(probs)
 
