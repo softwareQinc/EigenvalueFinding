@@ -5,7 +5,7 @@ from scipy.linalg import expm
 from qiskit import QuantumCircuit, Aer
 from qiskit.extensions import UnitaryGate
 from qiskit.algorithms import PhaseEstimation, IterativeAmplitudeEstimation, EstimationProblem
-from qiskit.utils import QuantumInstance
+from qiskit.primitives import Sampler
 
 
 class EigenvalueFinding:
@@ -37,6 +37,7 @@ def less_than(y):
     Output: Indicator function for whether or not bin2dec(x) < y"""
     return lambda x: bin2dec(x) < y
 
+
 def u0_circuit(n, matrix):
     """Purpose: Create circuit that prepares a uniform superposition of the eigenstates of a Hermitian/unitary matrix
     Input: Number n of qubits and the matrix
@@ -65,15 +66,14 @@ def amp_est(eigfinding, y, alpha=None):
     Input: eigfinding object, float y for the function \chi_y, failure probability alpha.
     Output: Estimate of \Pr[X < y]."""
     if alpha is None:
-        alpha = 1 - 0.99 ** (1 / eigfinding.m)  # This ensures the overall success probability is >= 0.99
+        alpha = 1 - 0.90 ** (1 / eigfinding.m)  # This ensures the overall success probability is >= 0.90
 
     problem = EstimationProblem(state_preparation=algorithm_a(eigfinding=eigfinding),
                                 objective_qubits=list(range(eigfinding.qpe_bits)),
                                 is_good_state=less_than(y))
     backend = Aer.get_backend("aer_simulator")
-    quantum_instance = QuantumInstance(backend)
-    epsilon_ae = 0.25 * (1-eigfinding.delta)/eigfinding.N  # Required precision
-    ae = IterativeAmplitudeEstimation(epsilon_target=epsilon_ae, alpha=alpha, quantum_instance=quantum_instance)
+    epsilon_ae = 0.24 * (1-eigfinding.delta)/eigfinding.N  # Required precision
+    ae = IterativeAmplitudeEstimation(epsilon_target=epsilon_ae, alpha=alpha, sampler=Sampler())
     return ae.estimate(problem).estimation
 
 
@@ -84,6 +84,7 @@ def find_min(eigfinding):
     y = 0.5  # y_0
     y_seq = [y]
     for i in range(1, eigfinding.m + 1):
+        print("Working on step {0} of {1}".format(i, eigfinding.m))
         ptilde = amp_est(eigfinding=eigfinding, y=y)
         if ptilde > eigfinding.q:
             y -= 1/2**(i+1)
@@ -95,8 +96,8 @@ def find_min(eigfinding):
 
 
 if __name__ == "__main__":  # Run algorithm on random matrix
-    error=2**-7
-    dim=8
+    error = 2**-7
+    dim = 8
     d = [0.1 + 0.8*random() for _ in range(dim)]
     mat = np.diag(d)
     ef = EigenvalueFinding(mat,error)
