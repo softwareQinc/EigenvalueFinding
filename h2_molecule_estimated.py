@@ -40,6 +40,7 @@ for bond_length in [1.2]:
     ef = EigenvalueFinding(hamiltonian, 2**-6)
     energy = find_min(ef)[-1]
     print("Estimated ground state energy is", 4*energy - 2)
+    print("Exact value is roughly -1.0567")
 
     # hf_energies.append(ground_energy)
 
