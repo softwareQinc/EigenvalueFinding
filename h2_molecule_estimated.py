@@ -9,16 +9,20 @@ import matplotlib.pyplot as plt
 
 from eig_search import EigenvalueFinding, find_min
 
+
 basis = 'sto-3g'
 multiplicity = 1
-bond_length_step = 0.05
-min_bond_length = 1
-max_bond_length = 1
+bond_length_step = 0.01
+min_bond_length = 0.3
+max_bond_length = 2.5
+epsilon = 0.01
 
-hf_energies = []
+estimated_energies = []
+exact_energies = []
 bond_lengths = np.arange(min_bond_length, max_bond_length, bond_length_step)
 
-for bond_length in [1.2]:
+for bond_length in bond_lengths:
+    # print("Bond length:", bond_length)
     geometry = [('H', (0., 0., 0.)), ('H', (0., 0., bond_length))]
     molecule = MolecularData(geometry, basis, multiplicity, description="")
 
@@ -34,13 +38,20 @@ for bond_length in [1.2]:
     hamiltonian = of.get_sparse_operator(hamiltonian_jw)
 
     # Now shift and rescale:
-    hamiltonian += 2*np.identity(16)  # Also converts to numpy matrix type
-    hamiltonian /= 4
+    shift_factor = 1.1*scipy.linalg.norm(hamiltonian.toarray(), 2)
+    hamiltonian += shift_factor*np.identity(16)  # Also converts to numpy matrix type
+    hamiltonian /= (2*shift_factor)
+    assert all([0<x<1 for x in np.linalg.eigvals(hamiltonian)])
+    exact_energy = shift_factor * 2 * np.min(np.linalg.eigvals(hamiltonian)) - shift_factor
+    exact_energies.append(exact_energy)
 
-    ef = EigenvalueFinding(hamiltonian, 2**-6)
-    energy = find_min(ef)[-1]
-    print("Estimated ground state energy is", 4*energy - 2)
-    print("Exact value is roughly -1.0567")
+    ef = EigenvalueFinding(hamiltonian, epsilon=epsilon/(2*shift_factor))
+    approximate_energy = (shift_factor*2)*find_min(ef)[-1] - shift_factor
+    estimated_energies.append(approximate_energy)
 
-    # hf_energies.append(ground_energy)
-
+    with open("h2_data.txt", "a") as f:
+        f.write(str(round(bond_length, 2)) + " " + str(exact_energy.real) + "\n")
+#
+# plt.plot(bond_lengths, estimated_energies)
+# plt.plot(bond_lengths, exact_energies)
+# plt.show()
