@@ -11,7 +11,7 @@ from qiskit.primitives import Sampler
 class EigenvalueFinding:
     """Class containing all information necessary for solving the eigenvalue problem. Some parameters are redundant but
      are still handy to carry around."""
-    def __init__(self, matrix, epsilon):
+    def __init__(self, matrix, epsilon, above_half=False):
         self.mat = matrix
         self.epsilon = epsilon
         self.m = ceil(log2(1 / epsilon))
@@ -21,6 +21,7 @@ class EigenvalueFinding:
         self.qpe_bits = self.m + ceil(log2(2 + 1 / (2 * self.delta)))  # For simplicity, we don't use the median trick
         self.q = 0.75*(1-self.delta)/self.N  #  Because we use iterative amplitude estimation, we have a different
                                              # threshold than in the paper
+        self.above_half = above_half
 
 
 def bin2dec(b):
@@ -31,11 +32,14 @@ def bin2dec(b):
     return sum([0.5 ** i for i in range(1, len(b) + 1) if b[-i] == '1'])
 
 
-def less_than(y):
+def less_than(y, above_half):
     """Purpose: Prepare function that can be used by Amplitude Estimation to determine whether string is good or not
-    Input: y
-    Output: Indicator function for whether or not bin2dec(x) < y"""
-    return lambda x: bin2dec(x) < y
+    Input: y, above_half
+    Output: Indicator function for whether or not x is good"""
+    if above_half:
+        return lambda x: 0.5 < bin2dec(x) < y
+    else:
+        return lambda x: bin2dec(x) < y
 
 
 def u0_circuit(n, matrix):
@@ -70,7 +74,7 @@ def amp_est(eigfinding, y, alpha=None):
 
     problem = EstimationProblem(state_preparation=algorithm_a(eigfinding=eigfinding),
                                 objective_qubits=list(range(eigfinding.qpe_bits)),
-                                is_good_state=less_than(y))
+                                is_good_state=less_than(y, eigfinding.above_half))
     backend = Aer.get_backend("aer_simulator")
     epsilon_ae = 0.24 * (1-eigfinding.delta)/eigfinding.N  # Required precision
     ae = IterativeAmplitudeEstimation(epsilon_target=epsilon_ae, alpha=alpha, sampler=Sampler())
@@ -84,7 +88,7 @@ def find_min(eigfinding):
     y = 0.5  # y_0
     y_seq = [y]
     for i in range(1, eigfinding.m + 1):
-        print("Working on step {0} of {1}".format(i, eigfinding.m))
+        # print("Working on step {0} of {1}".format(i, eigfinding.m))
         ptilde = amp_est(eigfinding=eigfinding, y=y)
         if ptilde > eigfinding.q:
             y -= 1/2**(i+1)
@@ -100,7 +104,7 @@ if __name__ == "__main__":  # Run algorithm on random matrix
     dim = 8
     d = [0.1 + 0.8*random() for _ in range(dim)]
     mat = np.diag(d)
-    ef = EigenvalueFinding(mat,error)
+    ef = EigenvalueFinding(mat, error)
     find_min(ef)
 
     # Specify error and matrix size

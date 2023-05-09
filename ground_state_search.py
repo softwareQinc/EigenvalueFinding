@@ -4,21 +4,20 @@ from eig_search import *
 import numpy as np
 from random import random
 from scipy.stats import unitary_group
-import qiskit
 from qiskit import QuantumCircuit, Aer, transpile, QuantumRegister, ClassicalRegister
 from qiskit.algorithms import AmplificationProblem, Grover
 from qiskit.primitives import Sampler
 from qiskit.quantum_info import Statevector, partial_trace
 
 
-def get_ground_state(matrix, epsilon):
+def get_ground_state(matrix, epsilon, theta0=None, above_half=False):
+    ef = EigenvalueFinding(matrix, epsilon/4, above_half=above_half)
+    print(ef.qpe_bits)
     # Step 1: Get estimate \theta_0
-    # ef = EigenvalueFinding(matrix, epsilon/4)
-    # theta0 = find_min(ef)
-    theta0 = 0.21  # Skip step 1 for testing purposes just to save time
+    if theta0 is None:
+        theta0 = find_min(ef)
 
     # Step 2: Construct the Grover circuit
-    ef = EigenvalueFinding(matrix, epsilon/4)  # Need a bit more precision
     oracle_list = [0]*(2**(ef.qpe_bits + ef.n))  # The entry at index x is 1 iff x is close to theta_0
     good_states = []  # List of good states
     for x in range(2**ef.qpe_bits):
@@ -77,7 +76,7 @@ if __name__ == "__main__":
     _, p = np.linalg.eigh(mat)
     psi_0 = p[:, 0]
 
-    rho = get_ground_state(mat, error)
+    rho = get_ground_state(mat, error, theta0=0.21)
     overlap = rho.evolve(Statevector(psi_0)).trace()
     print(overlap.real)  # Ignore small imaginary component coming from roundoff error
 
