@@ -12,7 +12,7 @@ from qiskit.quantum_info import Statevector, partial_trace
 
 def get_ground_state(matrix, epsilon, theta0=None, above_half=False):
     ef = EigenvalueFinding(matrix, epsilon/4, above_half=above_half)
-    print(ef.qpe_bits)
+    print("Number of qubits is roughly", ef.qpe_bits + ef.n)
     # Step 1: Get estimate \theta_0
     if theta0 is None:
         theta0 = find_min(ef)
