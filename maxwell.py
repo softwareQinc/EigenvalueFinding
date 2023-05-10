@@ -13,18 +13,19 @@ def get_discretization_matrix(N, d, epsilon_r):
     return epsilon_matrix @ second_derivative
 
 if __name__ == "__main__":
-    N = 2**4
+    N = 2**2
     d = 0.4
     epsilon_r = 10
     mat = get_discretization_matrix(N, d, epsilon_r)
     eigs = np.linalg.eigvals(mat)
 
-
-    scale_factor = 1.1*max([abs(x) for x in eigs])
-    hermitian_matrix = np.block([[np.identity(N), mat], [mat.transpose(), np.identity(N)]])
+    scale_factor = 1.1*np.max([abs(x) for x in eigs])
+    zer = np.zeros((N, N))
+    hermitian_matrix = np.block([[zer, mat], [mat.transpose(), zer]])
     hermitian_matrix += scale_factor*np.identity(2*N)
     hermitian_matrix /= 2*scale_factor
-    rho = get_ground_state(hermitian_matrix, epsilon=(2**-3)/(2*scale_factor))
+
+    rho = get_ground_state(hermitian_matrix, epsilon=(2**-1)/(2*scale_factor))
     rho = partial_trace(rho, [0])  # First qubit comes from block matrix, so we don't need it
 
 
