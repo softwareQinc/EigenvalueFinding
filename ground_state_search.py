@@ -12,10 +12,10 @@ from qiskit.quantum_info import Statevector, partial_trace
 
 def get_ground_state(matrix, epsilon, theta0=None, above_half=False):
     ef = EigenvalueFinding(matrix, epsilon/4, above_half=above_half)
-    print("Number of qubits is roughly", ef.qpe_bits + ef.n)
+    print("Number of qubits is roughly", ef.qpe_bits)
     # Step 1: Get estimate \theta_0
     if theta0 is None:
-        theta0 = find_min(ef)
+        theta0 = find_min(ef)[-1]
 
     # Step 2: Construct the Grover circuit
     oracle_list = [0]*(2**(ef.qpe_bits + ef.n))  # The entry at index x is 1 iff x is close to theta_0
