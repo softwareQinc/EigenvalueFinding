@@ -11,6 +11,12 @@ from qiskit.quantum_info import Statevector, partial_trace
 
 
 def get_ground_state(matrix, epsilon, theta0=None, above_half=False):
+    """PURPOSE: Prepare mixed state whose overlap with  the true ground state is high
+    INPUT: -Matrix matrix, desired error epsilon,
+    Recall that the first part of the algorithm is to produce an estimate theta0 of lambda0. To speed things up, we optionally allow the user to cheat and supply such an estimate.
+    We also allow the user to ask for the us to ignore eigenvalues less than 0.5. NOTE: It is not clear whether this is useful now that we know that our trick for Hermiticizing non-Hermitian matrices doesn't work...
+    OUTPUT: Density matrix
+    """
     ef = EigenvalueFinding(matrix, epsilon/4, above_half=above_half)
     print("Number of qubits is roughly", ef.qpe_bits)
     # Step 1: Get estimate \theta_0
@@ -18,12 +24,16 @@ def get_ground_state(matrix, epsilon, theta0=None, above_half=False):
         theta0 = find_min(ef)[-1]
 
     # Step 2: Construct the Grover circuit
-    oracle_list = [0]*(2**(ef.qpe_bits + ef.n))  # The entry at index x is 1 iff x is close to theta_0
-    good_states = []  # List of good states
+    # This part is very tricky. We need to explicitly construct the Grover oracle
+    oracle_list = [0]*(2**(ef.qpe_bits + ef.n))  # The entry at index x will be 1 iff x is close to theta_0. This is required by Qiskit
+    good_states = []  # We will also build a list of good states
     for x in range(2**ef.qpe_bits):
-        if abs(x/2**ef.qpe_bits - theta0) < epsilon/2:
+        if abs(x/2**ef.qpe_bits - theta0) < epsilon/2:  # If x is close to theta_0
+            # We can't just mark |x>, but rather, we need to mark all states of the form |y>|x>, where |y> is what's inside the cloc register
+            # Thus we iterate over all bit strings y:
             for y in range(2**ef.n):
-                z = bin(y)[2:].zfill(ef.n) + bin(x)[2:].zfill(ef.qpe_bits)[::-1]  # Check this...
+                # ... and add them to the list of good states AND modify the oracle list
+                z = bin(y)[2:].zfill(ef.n) + bin(x)[2:].zfill(ef.qpe_bits)[::-1]
                 good_states.append(z)
                 oracle_list[int(z, 2)] = 1
 
@@ -32,11 +42,12 @@ def get_ground_state(matrix, epsilon, theta0=None, above_half=False):
                                    is_good_state=good_states)
     grover = Grover(sampler=Sampler())
 
-    # Step 3: Figure out how many iterations are needed
+    # Step 3: Construct Grover circuit
+    # We will postselect later, so it really doesn't matter how many iterations we choose. I have selected 2 so that it is a nontrivial number, but also doesn't take too long
     qc = grover.construct_circuit(problem=problem, power=2, measurement=False)
     # Step 4: Execute circuit and extract statevector
-    backend = Aer.get_backend("statevector_simulator")
-    # First we need to apply the bit oracle in order to postselect
+    # In order to postselect, we need to append an ancilla qubit and create a bit oracle.
+    # Concretely, we create the state |bad>|0> + |good>|1> and postselect on |1> in the second register
     # Recall that a bit oracle is (I\otimes H) (controlled-phase oracle) (I\otimes H), with ctrl = last qubit
     qc.add_register(QuantumRegister(1))
     qc.h(ef.qpe_bits + ef.n)
@@ -51,13 +62,15 @@ def get_ground_state(matrix, epsilon, theta0=None, above_half=False):
     qc.append(cpo, [ef.qpe_bits + ef.n] + list(range(ef.qpe_bits + ef.n)))
 
     qc.h(ef.qpe_bits + ef.n)
-    print(qc)
+    backend = Aer.get_backend("statevector_simulator")
     qc = transpile(qc, backend)
     job = backend.run(qc)
     result = job.result()
     svec = result.get_statevector(qc)
 
     svec = svec.evolve(Statevector([0, 1]).to_operator(), [ef.qpe_bits+ef.n])  # Postselect last qubit being |1>
+    # ^Here, the Statevector([0, 1]).to_operator() bit creates |1><1|
+
     # Now trace out QPE and ancilla qubits
     return partial_trace(svec, list(range(ef.qpe_bits)) + [ef.qpe_bits + ef.n])
 
@@ -66,9 +79,10 @@ if __name__ == "__main__":
     # Specify error and matrix size
     error = 2**(-3)
     dim = 2**3
+    lambda_0 = 0.20
 
     # Choose random Hermitian matrix to run algorithm on by choosing random diagonal matrix and conjugating by unitary
-    d = [0.2] + [0.25 + 0.6 * random() for _ in range(dim-1)]  # If you change 0.2 you must also change theta0 above
+    d = [lambda_0] + [0.25 + 0.6 * random() for _ in range(dim-1)]  # If you change 0.2 you must also change theta0 above
     d = np.sort(d)
     mat = np.diag(d)
     un = unitary_group.rvs(dim)
@@ -76,11 +90,6 @@ if __name__ == "__main__":
     _, p = np.linalg.eigh(mat)
     psi_0 = p[:, 0]
 
-    rho = get_ground_state(mat, error, theta0=0.21)
+    rho = get_ground_state(mat, error, theta0=lambda_0+error/10)
     overlap = rho.evolve(Statevector(psi_0)).trace()
     print(overlap.real)  # Ignore small imaginary component coming from roundoff error
-
-    # probs = rho.probabilities()  # Get probabilities
-    # probs /= sum(probs)  # Normalize
-    # print(probs)
-
