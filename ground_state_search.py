@@ -18,7 +18,7 @@ def get_ground_state(matrix, epsilon, theta0=None, above_half=False):
     OUTPUT: Density matrix
     """
     ef = EigenvalueFinding(matrix, epsilon/4, above_half=above_half)
-    print("Number of qubits is roughly", ef.qpe_bits)
+    # print("Number of qubits is roughly", ef.qpe_bits)
     # Step 1: Get estimate \theta_0
     if theta0 is None:
         theta0 = find_min(ef)[-1]
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     lambda_0 = 0.20
 
     # Choose random Hermitian matrix to run algorithm on by choosing random diagonal matrix and conjugating by unitary
-    d = [lambda_0] + [0.25 + 0.6 * random() for _ in range(dim-1)]  # If you change 0.2 you must also change theta0 above
+    d = [lambda_0] + [lambda_0 + 1.5*error + (1-lambda_0-1.5*error) * random() for _ in range(dim-1)]  # random eigs
     d = np.sort(d)
     mat = np.diag(d)
     un = unitary_group.rvs(dim)
@@ -92,4 +92,5 @@ if __name__ == "__main__":
 
     rho = get_ground_state(mat, error, theta0=lambda_0+error/10)
     overlap = rho.evolve(Statevector(psi_0)).trace()
-    print(overlap.real)  # Ignore small imaginary component coming from roundoff error
+    print("Eigs are", d)
+    print("Overlap is", overlap.real)  # Ignore small imaginary component coming from roundoff error
