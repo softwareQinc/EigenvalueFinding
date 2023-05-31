@@ -1,9 +1,9 @@
+"""Purpose: Generate exact ground state values for H2 molecule with lots of different bond lengths"""
+
 import openfermion as of
-from openfermion.ops import FermionOperator, QubitOperator
 from openfermion import MolecularData
 import openfermionpyscf as ofpyscf
 import numpy as np
-from scipy.sparse import linalg
 import scipy
 import matplotlib.pyplot as plt
 
@@ -20,19 +20,14 @@ for bond_length in bond_lengths:
     geometry = [('H', (0., 0., 0.)), ('H', (0., 0., bond_length))]
     molecule = MolecularData(geometry, basis, multiplicity, description="")
 
-    # Load data.
     molecule.load()
-    # obtain Hamiltonian as an InteractionOperator
     hamiltonian = ofpyscf.generate_molecular_hamiltonian(geometry, basis, multiplicity, charge=0)
-    # Convert to a FermionOperator
     hamiltonian_ferm_op = of.get_fermion_operator(hamiltonian)
-    # Map to QubitOperator using the JWT
     hamiltonian_jw = of.jordan_wigner(hamiltonian_ferm_op)
-    # Convert to Scipy sparse matrix
     hamiltonian_jw_sparse = of.get_sparse_operator(hamiltonian_jw)
 
     # Compute ground state energy
-    eigs, _ = scipy.linalg.eig(hamiltonian_jw_sparse.toarray())
+    eigs, _ = [e.real for e in scipy.linalg.eig(hamiltonian_jw_sparse.toarray())]
     ground_energy = np.min(eigs)
 
     hf_energies.append(ground_energy)
