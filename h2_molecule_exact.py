@@ -14,6 +14,7 @@ min_bond_length = 0.3
 max_bond_length = 2.5
 
 hf_energies = []
+hf_norms = []
 bond_lengths = np.arange(min_bond_length, max_bond_length, bond_length_step)
 
 for bond_length in bond_lengths:
@@ -30,7 +31,16 @@ for bond_length in bond_lengths:
     eigs, _ = [e.real for e in scipy.linalg.eig(hamiltonian_jw_sparse.toarray())]
     ground_energy = np.min(eigs)
 
+    # Compute Hamiltonian norms
+    norm = np.max(eigs)+np.abs(ground_energy)
+
     hf_energies.append(ground_energy)
+    hf_norms.append(norm)
+
+
+print("Hamiltonian norms (min, max): ", [np.min(hf_norms), np.max(hf_norms)])
+print("Scaling of the algorithm [sqrt(N) * ||H|| * 1/\epsilon]: ", np.sqrt(2^4) * np.max(hf_norms) * 10^2)
+
 
 plt.plot(bond_lengths, hf_energies)
 plt.xlabel("Bond length")

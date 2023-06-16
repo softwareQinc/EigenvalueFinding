@@ -115,7 +115,7 @@ if __name__ == "__main__":
 
     else:
         #get FEM matrix
-        mat = fem_matrix(dim, 2/3, -0.5, x_0=2/9)
+        mat = fem_matrix(dim, 10/17, 5., x_0=-6/17)
 
         ev0, p = np.linalg.eigh(mat)
         psi_0 = p[:, 0]
@@ -141,7 +141,19 @@ if __name__ == "__main__":
         lambda0, rho = get_ground_state(mat, error)
     overlap = rho.evolve(Statevector(psi_0)).trace()
 
+    rho.__array__()
+
+    #export the matrices
+    rho_exact = np.outer(psi_0, psi_0)
+    import pandas as pd
+    pd.DataFrame(np.round(np.real(rho), 4)).to_csv("data/re_num_rho.csv", header=None, index=None)
+    pd.DataFrame(np.round(np.imag(rho), 4)).to_csv("data/im_num_rho.csv", header=None, index=None)
+    pd.DataFrame(np.round(np.real(rho_exact), 4)).to_csv("data/re_exact_rho.csv", header=None, index=None)
+    pd.DataFrame(np.round(np.imag(rho_exact), 4)).to_csv("data/im_exact_rho.csv", header=None, index=None)
+
     print("Eigs are", ev)
-    print("The estimated/real values for lambda are", [lambda0, min(abs(ev))])
-    print("The error is:", error)
+    print("The estimated/real values for lambda are (bare)", [lambda0, min(abs(ev))])
+    print("The estimated/real values for lambda are (rescaled)", [lambda0*scale_factor-shift_val, min(abs(ev))*scale_factor-shift_val])
+    print("The error is (bare):", error)
+    print("The error is (rescaled):", error*scale_factor)
     print("Overlap is", overlap.real)  # Ignore small imaginary component coming from roundoff error
