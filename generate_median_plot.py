@@ -43,7 +43,7 @@ median_data_3 = {x/2**6: 0 for x in range(2**6)}
 for (x1,x2,x3,x4,x5) in product(range(2**6), range(2**6), range(2**6), range(2**6), range(2**6)):
     median_data_5[median([x1, x2, x3, x4, x5]) / 2 ** 6] += data[x1] * data[x2] * data[x3] * data[x4] * data[x5]
 for (x1,x2,x3) in product(range(2**6), range(2**6), range(2**6)):
-    median_data_5[median([x1, x2, x3]) / 2 ** 6] += data[x1] * data[x2] * data[x3]
+    median_data_3[median([x1, x2, x3]) / 2 ** 6] += data[x1] * data[x2] * data[x3]
 
 plt.semilogy([x/2**6 for x in range(2**6)], median_data_5.values(), label='Median trick with $c = 5$', base=2)
 plt.semilogy([x/2**6 for x in range(2**6)], median_data_3.values(), label='Median trick with $c = 3$', base=2)
@@ -54,15 +54,16 @@ plt.title("QPE probability distribution with and without the median trick ($\lam
 plt.legend()
 
 
-with open("median_plot_new.txt", 'a') as f:
-    for x in data:
-        f.write(str(x) + ' ')
-    f.write("\n")
-    for x in median_data_3.values():
-        f.write(str(x) + ' ')
-    f.write("\n")
-    for x in median_data_5.values():
-        f.write(str(x) + ' ')
+# Uncomment to write data
+# with open("median_plot_new.txt", 'a') as f:
+#     for x in data:
+#         f.write(str(x) + ' ')
+#     f.write("\n")
+#     for x in median_data_3.values():
+#         f.write(str(x) + ' ')
+#     f.write("\n")
+#     for x in median_data_5.values():
+#         f.write(str(x) + ' ')
 
 plt.show()
 

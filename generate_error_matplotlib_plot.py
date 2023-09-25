@@ -11,18 +11,15 @@ plt.semilogy(range(7), [epsilon/2 + 2**-(i+1) for i in range(7)], 'k', linewidth
 with open("eig_search_errors.txt", 'r') as f:
     lines = f.readlines()
 
-n_trials = len(lines)
+n_trials = len(lines) - 2
 
-for i in range(n_trials):
-    xpts = [float(x) for x in lines[i].split()]
+for i, line in enumerate(lines[2:]):
+    xpts = [float(x) for x in line.split()]
     for j in range(7):
         sums[j] += xpts[j]
         maxes[j] = max(maxes[j], xpts[j])
-    if 980 <= i < 1000:
-        if i == 0:
-            plt.semilogy(xpts, 'blue', linewidth=0.4, base=2)
-        else:
-            plt.semilogy(xpts, 'blue', linewidth=0.4, base=2)
+    if 980 <= i < 1000:  # Arbitrary choice of 20 error sequences to plot
+        plt.semilogy(xpts, 'blue', linewidth=0.4, base=2)
 
 averages = [s/n_trials for s in sums]
 plt.semilogy(averages, 'blue', linewidth=2, base=2)
@@ -30,5 +27,5 @@ plt.semilogy(maxes, 'green', linewidth=2, base=2)
 
 plt.xlabel('$i$')
 plt.ylabel('$|y_i - \lambda_0|$')
-# plt.show()
-tikzplotlib.save('new_error_plot.tex')
+plt.show()
+# tikzplotlib.save('new_error_plot.tex')

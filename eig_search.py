@@ -103,9 +103,11 @@ if __name__ == "__main__":  # Run algorithm on random matrix
     error = 2**-7
     dim = 8
     d = [0.1 + 0.8*random() for _ in range(dim)]
+    print(min(d))
     mat = np.diag(d)
     ef = EigenvalueFinding(mat, error)
-    find_min(ef)
+    min_d = find_min(ef)
+    print(min_d)
 
     # Specify error and matrix size
     # error = 2**(-7)

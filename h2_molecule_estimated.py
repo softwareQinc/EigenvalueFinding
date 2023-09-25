@@ -32,7 +32,8 @@ for bond_length in bond_lengths:
     hamiltonian_jw = of.jordan_wigner(hamiltonian_ferm_op)
     hamiltonian = of.get_sparse_operator(hamiltonian_jw)
 
-    # Now shift and rescale:
+    # Now shift and rescale. We multiply by 1.1 times the norm, but in practice we would have to estimate the norm,
+    # since calculating it is likely to take a long time:
     shift_factor = 1.1*scipy.linalg.norm(hamiltonian.toarray(), 2)
     hamiltonian += shift_factor*np.identity(16)  # Also converts to numpy matrix type
     hamiltonian /= (2*shift_factor)

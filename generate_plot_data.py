@@ -12,7 +12,7 @@ dim = 2**3
 
 for _ in range(1000):
     print("Working on instance number ", _)
-    # Choose random Hermitian matrix to run algorithm on by choosing random diagonal matrix ##and conjugating by unitary
+    # Choose random diagonal matrix
     d = [error + (1-2*error) * random() for _ in range(dim)]  # Can't have eigs close to 0 or 1 due to QPE wraparound
     lambda_0 = min(d)
     mat = np.diag(d)
