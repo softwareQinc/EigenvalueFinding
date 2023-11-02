@@ -84,22 +84,25 @@ def get_ground_state(matrix, epsilon, theta0=None, above_half=False):
     svec = svec.evolve(Statevector([0, 1]).to_operator(), [ef.qpe_bits+ef.n])  # Postselect last qubit being |1>
     # ^Here, the Statevector([0, 1]).to_operator() bit creates |1><1|
 
+    # normalize
+    svec = svec/np.linalg.norm(svec)
+
     # Now trace out QPE and ancilla qubits
     return theta0, partial_trace(svec, list(range(ef.qpe_bits)) + [ef.qpe_bits + ef.n])
 
 
 if __name__ == "__main__":
     # Specify error, matrix size, and decide whether to use real FEM matrix:
-    FEM_yes = True
+    FEM_yes = False
     if FEM_yes:
         error = 2 ** (-2)
     else:
         error = 2 ** (-2)
 
-    dim = 2**4
+    dim = 2**3
     lambda_0 = 0.25
 
-    #Decide whether we want to use the FEM matrix:
+    # Decide whether we want to use the FEM matrix:
 
 
     if not FEM_yes:
@@ -132,19 +135,19 @@ if __name__ == "__main__":
 
         error = min([error,2 ** np.floor(log2(delta_energy) - 0*1)])
         #error = 2 ** np.floor(log2(error / scale_factor))
-        print("Number of qubits in the clock register:", -log2(error))
+        print("Number of qubits in the clock register:", int(-log2(error)))
         print()
 
     if not FEM_yes:
         lambda0, rho = get_ground_state(mat, error, theta0=lambda_0+error/10)
     else:
         lambda0, rho = get_ground_state(mat, error)
-    overlap = rho.evolve(Statevector(psi_0)).trace()
+    overlap = rho.expectation_value(Statevector(psi_0).to_operator())
 
-    rho.__array__()
+    # rho.__array__()
 
     #export the matrices
-    rho_exact = np.outer(psi_0, psi_0)
+    rho_exact = np.outer(psi_0, psi_0.conjugate())
     import pandas as pd
     pd.DataFrame(np.round(np.real(rho), 4)).to_csv("data/re_num_rho.csv", header=None, index=None)
     pd.DataFrame(np.round(np.imag(rho), 4)).to_csv("data/im_num_rho.csv", header=None, index=None)
@@ -153,7 +156,7 @@ if __name__ == "__main__":
 
     print("Eigs are", ev)
     print("The estimated/real values for lambda are (bare)", [lambda0, min(abs(ev))])
-    print("The estimated/real values for lambda are (rescaled)", [lambda0*scale_factor-shift_val, min(abs(ev))*scale_factor-shift_val])
+    #print("The estimated/real values for lambda are (rescaled)", [lambda0*scale_factor-shift_val, min(abs(ev))*scale_factor-shift_val])
     print("The error is (bare):", error)
-    print("The error is (rescaled):", error*scale_factor)
+    #print("The error is (rescaled):", error*scale_factor)
     print("Overlap is", overlap.real)  # Ignore small imaginary component coming from roundoff error
