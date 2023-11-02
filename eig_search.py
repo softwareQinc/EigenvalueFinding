@@ -11,6 +11,7 @@ from qiskit.primitives import Sampler
 class EigenvalueFinding:
     """Class containing all information necessary for solving the eigenvalue problem. Some parameters are redundant but
      are still handy to carry around."""
+
     def __init__(self, matrix, epsilon, above_half=False):
         self.mat = matrix
         self.epsilon = epsilon
@@ -19,8 +20,8 @@ class EigenvalueFinding:
         self.n = int(log2(self.N))
         self.delta = 1 / (2 * self.N + 2)
         self.qpe_bits = self.m + ceil(log2(2 + 1 / (2 * self.delta)))  # For simplicity, we don't use the median trick
-        self.q = 0.75*(1-self.delta)/self.N  #  Because we use iterative amplitude estimation, we have a different
-                                             # threshold than in the paper
+        self.q = 0.75 * (1 - self.delta) / self.N  # Because we use iterative amplitude estimation, we have a different
+        # threshold than in the paper
         self.above_half = above_half
 
 
@@ -76,7 +77,7 @@ def amp_est(eigfinding, y, alpha=None):
                                 objective_qubits=list(range(eigfinding.qpe_bits)),
                                 is_good_state=less_than(y, eigfinding.above_half))
     backend = Aer.get_backend("aer_simulator")
-    epsilon_ae = 0.24 * (1-eigfinding.delta)/eigfinding.N  # Required precision
+    epsilon_ae = 0.24 * (1 - eigfinding.delta) / eigfinding.N  # Required precision
     ae = IterativeAmplitudeEstimation(epsilon_target=epsilon_ae, alpha=alpha, sampler=Sampler())
     return ae.estimate(problem).estimation
 
@@ -91,18 +92,18 @@ def find_min(eigfinding):
         # print("Working on step {0} of {1}".format(i, eigfinding.m))
         ptilde = amp_est(eigfinding=eigfinding, y=y)
         if ptilde > eigfinding.q:
-            y -= 1/2**(i+1)
+            y -= 1 / 2 ** (i + 1)
         else:
-            y += 1/2**(i+1)
+            y += 1 / 2 ** (i + 1)
         y_seq.append(y)
         # print("y_{0} = {1}".format(i, y))
     return y_seq
 
 
 if __name__ == "__main__":  # Run algorithm on random matrix
-    error = 2**-7
+    error = 2 ** -7
     dim = 8
-    d = [0.1 + 0.8*random() for _ in range(dim)]
+    d = [0.1 + 0.8 * random() for _ in range(dim)]
     print(min(d))
     mat = np.diag(d)
     ef = EigenvalueFinding(mat, error)
@@ -140,7 +141,3 @@ if __name__ == "__main__":  # Run algorithm on random matrix
     # # print("\nlambda_0 = {0}".format(min(d)))
     # # print("Algorithm estimates lambda_0 ~ {0}".format(estimated_minimum))
     # # print("true_error / desired_error = {0} (should be <1)".format(true_error / error))
-
-
-
-

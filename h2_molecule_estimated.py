@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 
 from eig_search import EigenvalueFinding, find_min
 
-
 basis = 'sto-3g'
 multiplicity = 1
 bond_length_step = 0.01
@@ -34,15 +33,15 @@ for bond_length in bond_lengths:
 
     # Now shift and rescale. We multiply by 1.1 times the norm, but in practice we would have to estimate the norm,
     # since calculating it is likely to take a long time:
-    shift_factor = 1.1*scipy.linalg.norm(hamiltonian.toarray(), 2)
-    hamiltonian += shift_factor*np.identity(16)  # Also converts to numpy matrix type
-    hamiltonian /= (2*shift_factor)
+    shift_factor = 1.1 * scipy.linalg.norm(hamiltonian.toarray(), 2)
+    hamiltonian += shift_factor * np.identity(16)  # Also converts to numpy matrix type
+    hamiltonian /= (2 * shift_factor)
     assert all([0 < x < 1 for x in np.linalg.eigvals(hamiltonian)])  # Doublecheck rescaling was correct
     exact_energy = shift_factor * 2 * np.min(np.linalg.eigvals(hamiltonian)) - shift_factor
     exact_energies.append(exact_energy)
 
-    ef = EigenvalueFinding(hamiltonian, epsilon=epsilon/(2*shift_factor))
-    approximate_energy = (shift_factor*2)*find_min(ef)[-1] - shift_factor
+    ef = EigenvalueFinding(hamiltonian, epsilon=epsilon / (2 * shift_factor))
+    approximate_energy = (shift_factor * 2) * find_min(ef)[-1] - shift_factor
     estimated_energies.append(approximate_energy)
 
     with open("h2_data.txt", "a") as f:

@@ -30,9 +30,7 @@ for bond_length in bond_lengths:
     eigs, _ = [e.real for e in scipy.linalg.eig(hamiltonian_jw_sparse.toarray())]
     ground_energy = np.min(eigs)
 
-
 plt.plot(bond_lengths, hf_energies)
 plt.xlabel("Bond length")
 plt.ylabel("Ground state energy")
 plt.show()
-

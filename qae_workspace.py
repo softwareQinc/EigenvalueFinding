@@ -7,7 +7,7 @@ from qiskit.quantum_info import Statevector, partial_trace
 
 # Step 1: Define the problem
 # We would like to amplify states |110> and |111>
-oracle = Statevector([0,0,0,0,0,0,1,1])  # Entry i is the output of a bit-query oracle when query is i.
+oracle = Statevector([0, 0, 0, 0, 0, 0, 1, 1])  # Entry i is the output of a bit-query oracle when query is i.
 
 # Specifying `state_preparation` to prepare a superposition of |01>, |10>, and |11>
 # theta = 2 * np.arccos(1 / np.sqrt(3))
@@ -16,11 +16,11 @@ oracle = Statevector([0,0,0,0,0,0,1,1])  # Entry i is the output of a bit-query 
 # state_preparation.ch(0,1)
 # state_preparation.x(1)
 # state_preparation.h(2)
-n=6
+n = 6
 state_preparation = QuantumCircuit(n)
-oracle = Statevector([0]*(2**n - 1) + [1])  # Entry i is the output of a bit-query oracle when query is i.
+oracle = Statevector([0] * (2 ** n - 1) + [1])  # Entry i is the output of a bit-query oracle when query is i.
 state_preparation.h(range(n))
-problem = AmplificationProblem(oracle=oracle, state_preparation=state_preparation, is_good_state=['1'*n])
+problem = AmplificationProblem(oracle=oracle, state_preparation=state_preparation, is_good_state=['1' * n])
 
 # problem = AmplificationProblem(oracle=oracle, state_preparation=state_preparation, is_good_state=['110', '111'])
 # End of step 1.

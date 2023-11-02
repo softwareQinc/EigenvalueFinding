@@ -16,7 +16,7 @@ exact = [complex(line.split()[1]).real for line in lines]
 error = [abs(approx[i] - exact[i]) for i in range(len(approx))]
 
 plt.semilogy(bond_lengths, error, base=2)
-plt.semilogy(bond_lengths, [0.01]*len(bond_lengths), base=2)
+plt.semilogy(bond_lengths, [0.01] * len(bond_lengths), base=2)
 plt.xlabel("Bond length")
 plt.ylabel("Error")
 # tikzplotlib.save("h2_error_plot.tex")

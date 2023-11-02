@@ -2,11 +2,11 @@
 import matplotlib.pyplot as plt
 import tikzplotlib
 
-sums = [0]*7
-maxes = [0]*7
-epsilon = 2**-6
+sums = [0] * 7
+maxes = [0] * 7
+epsilon = 2 ** -6
 
-plt.semilogy(range(7), [epsilon/2 + 2**-(i+1) for i in range(7)], 'k', linewidth=2, base=2)
+plt.semilogy(range(7), [epsilon / 2 + 2 ** -(i + 1) for i in range(7)], 'k', linewidth=2, base=2)
 
 with open("eig_search_errors.txt", 'r') as f:
     lines = f.readlines()
@@ -21,7 +21,7 @@ for i, line in enumerate(lines[2:]):
     if 980 <= i < 1000:  # Arbitrary choice of 20 error sequences to plot
         plt.semilogy(xpts, 'blue', linewidth=0.4, base=2)
 
-averages = [s/n_trials for s in sums]
+averages = [s / n_trials for s in sums]
 plt.semilogy(averages, 'blue', linewidth=2, base=2)
 plt.semilogy(maxes, 'green', linewidth=2, base=2)
 
