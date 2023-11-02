@@ -22,6 +22,7 @@ def get_ground_state(matrix, epsilon, theta0=None, above_half=False):
     # Step 1: Get estimate \theta_0
     if theta0 is None:
         theta0 = find_min(ef)[-1]
+        #print("The estimated value for the minimum eigenvalue is", theta0)
 
     # Step 2: Construct the Grover circuit
     # This part is very tricky. We need to explicitly construct the Grover oracle
@@ -52,14 +53,12 @@ def get_ground_state(matrix, epsilon, theta0=None, above_half=False):
     qc.add_register(QuantumRegister(1))
     qc.h(ef.qpe_bits + ef.n)
 
-    # Now construct phase oracle (po)
+    # Now construct phase oracle and controlled phase oracle (po and cpo)
     po = QuantumCircuit(ef.qpe_bits + ef.n)
-
     po.diagonal([(-1)**(bin(z)[2:].zfill(ef.qpe_bits + ef.n) in good_states) for z in range(2**(ef.qpe_bits + ef.n))],
                 list(range(ef.qpe_bits + ef.n)))
-
     cpo = po.to_gate().control(num_ctrl_qubits=1, label="CPO")
-    qc.append(cpo, [ef.qpe_bits + ef.n] + list(range(ef.qpe_bits + ef.n)))
+    qc.append(cpo, [ef.qpe_bits + ef.n] + list(range(ef.qpe_bits + ef.n)))  # Need to control/target the right qubits
 
     qc.h(ef.qpe_bits + ef.n)
     backend = Aer.get_backend("statevector_simulator")
@@ -71,26 +70,30 @@ def get_ground_state(matrix, epsilon, theta0=None, above_half=False):
     svec = svec.evolve(Statevector([0, 1]).to_operator(), [ef.qpe_bits+ef.n])  # Postselect last qubit being |1>
     # ^Here, the Statevector([0, 1]).to_operator() bit creates |1><1|
 
-    # Now trace out QPE and ancilla qubits
-    return partial_trace(svec, list(range(ef.qpe_bits)) + [ef.qpe_bits + ef.n])
+    # normalize
+    svec = svec/np.linalg.norm(svec)
+
+    # Now trace out the QPE clock qubits and the cpo qubit (that was just postselected)
+    return theta0, partial_trace(svec, list(range(ef.qpe_bits)) + [ef.qpe_bits + ef.n])
 
 
 if __name__ == "__main__":
     # Specify error and matrix size
     error = 2**(-3)
-    dim = 2**3
-    lambda_0 = 0.20
+    dim = 2**4
+    print("Running eigenvalue search on random {0}x{0} matrix with error = {1} ".format(dim, error))
 
-    # Choose random Hermitian matrix to run algorithm on by choosing random diagonal matrix and conjugating by unitary
-    d = [lambda_0] + [lambda_0 + 1.5*error + (1-lambda_0-1.5*error) * random() for _ in range(dim-1)]  # random eigs
-    d = np.sort(d)
-    mat = np.diag(d)
+    # Get some random eigs
+    d = np.sort([error + (1-2*error)*random() for _ in range(dim)])
+    print("Eigs are", d)
     un = unitary_group.rvs(dim)
     mat = un @ np.diag(d) @ un.conj().T
-    _, p = np.linalg.eigh(mat)
-    psi_0 = p[:, 0]
+    _, p = np.linalg.eigh(mat)  # _ is just d
+    # psi_0 = p[:, 0]
 
-    rho = get_ground_state(mat, error, theta0=lambda_0+error/10)
-    overlap = rho.evolve(Statevector(psi_0)).trace()
-    print("Eigs are", d)
+    theta0_error = (0.5 - random()) * error / 4  # Choose a random amount for theta0 to be off by
+    _, rho = get_ground_state(mat, error, theta0=d[0]+theta0_error)
+
+    good_projector = sum(Statevector(p[:, i]).to_operator() for i in range(dim) if d[i] - d[0] < error)
+    overlap = rho.evolve(good_projector).trace()
     print("Overlap is", overlap.real)  # Ignore small imaginary component coming from roundoff error
