@@ -20,8 +20,7 @@ def fem_matrix(N, d, epsilon_r, x_0=0.):
 
 if __name__ == "__main__":
     error = 2 ** (-2)
-    dim = 2 ** 3
-    lambda_0 = 0.25
+    dim = 2 ** 4
 
     mat = fem_matrix(dim, 10 / 17, 5., x_0=-6 / 17)
 
@@ -54,9 +53,9 @@ if __name__ == "__main__":
     pd.DataFrame(np.round(np.real(rho_exact), 4)).to_csv("data/re_exact_rho.csv", header=None, index=None)
     pd.DataFrame(np.round(np.imag(rho_exact), 4)).to_csv("data/im_exact_rho.csv", header=None, index=None)
 
-    # print("Eigs are", ev)
-    # print("The estimated/real values for lambda are (bare)", [lambda0, min(abs(ev))])
-    # print("The estimated/real values for lambda are (rescaled)", [lambda0*scale_factor-shift_val, min(abs(ev))*scale_factor-shift_val])
-    # print("The error is (bare):", error)
-    # print("The error is (rescaled):", error*scale_factor)
+    print("Eigs are", ev)
+    print("The estimated/real values for lambda are (bare)", [lambda0, min(abs(ev))])
+    print("The estimated/real values for lambda are (rescaled)", [lambda0*scale_factor-shift_val, min(abs(ev))*scale_factor-shift_val])
+    print("The error is (bare):", error)
+    print("The error is (rescaled):", error*scale_factor)
     print("Overlap is", overlap.real)  # Ignore small imaginary component coming from roundoff error
